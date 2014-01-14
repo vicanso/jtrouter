@@ -38,6 +38,7 @@ module.exports.initRoutes = (app, routeInfos) ->
           if statusCode > 299 && statusCode < 400
             res.redirect statusCode, renderData
           else if template
+            res.locals.template = template
             renderResponse req, res, template, renderData, headerOptions, next
           else
             if _.isObject renderData
@@ -70,6 +71,7 @@ module.exports.initRoutes = (app, routeInfos) ->
 ###
 renderResponse = (req, res, template, data, headerOptions, next) ->
   fileImporter = data.fileImporter || res.locals?.fileImporter
+  fileImporter.addTemplateFiles template
   res.render template, data, (err, html) =>
     if err
       next err
