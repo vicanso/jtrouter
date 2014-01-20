@@ -71,12 +71,12 @@ module.exports.initRoutes = (app, routeInfos) ->
 ###
 renderResponse = (req, res, template, data, headerOptions, next) ->
   fileImporter = data.fileImporter || res.locals?.fileImporter
-  fileImporter.addTemplateFiles template
   res.render template, data, (err, html) =>
     if err
       next err
       return 
     if fileImporter
+      fileImporter.emit 'beforeExport', template
       html = appendJsAndCss html, fileImporter
       fileImporter.emit 'export', template, {
         jsList : fileImporter.getFiles 'js'
