@@ -1,12 +1,4 @@
 _ = require 'underscore'
-# FOR removeSession funciton
-# crc32 = require 'buffer-crc32'
-# hash = (sess) ->
-#   crc32.signed JSON.stringify sess, (key, val) ->
-#     if key != 'cookie'
-#       val
-#     else
-#       undefined
 ###*
  * initRoutes 初始化路由处理
  * @param  {express对象} app   express的实例
@@ -21,15 +13,14 @@ module.exports.initRoutes = (app, routeInfos) ->
         if err
           next err
           return
-        # removeSession req
         if _.isNumber renderData
           tmp = statusCode
           statusCode = renderData
           renderData = tmp
         if _.isObject statusCode
           tmp = statusCode
-          headerOptions = statusCode
-          statusCode = tmp
+          statusCode = headerOptions
+          headerOptions = tmp
         if !_.isNumber statusCode
           statusCode = 200
         if renderData
@@ -59,6 +50,7 @@ module.exports.initRoutes = (app, routeInfos) ->
       _.each types, (type) ->
         method = type.toLowerCase()
         app[method] route, middleware, handle
+
 ###*
  * renderResponse render模板
  * @param  {[type]}   req           [description]
@@ -69,7 +61,7 @@ module.exports.initRoutes = (app, routeInfos) ->
  * @param  {Function} next          [description]
  * @return {[type]}                 [description]
 ###
-renderResponse = (req, res, template, data, headerOptions, next) ->
+renderResponse = module.exports.render = (req, res, template, data, headerOptions, next) ->
   fileImporter = data.fileImporter || res.locals?.fileImporter
   res.render template, data, (err, html) =>
     if err
@@ -158,15 +150,3 @@ appendJsAndCss = (html, fileImporter) ->
   ###
 resIsAvailable = (res) ->
   !res.headerSent
-
-###*
- * removeSession 对无变化的session不保存到数据库（不建议使用，因为如果不保存需要另外处理ttl）
- * @param  {[type]} req [description]
- * @return {[type]}     [description]
-###
-removeSession = (req) ->
-  sess = req.session
-  _jtSessionTag = req._jtSessionTag
-  if _jtSessionTag && sess
-    console.dir _jtSessionTag.id == sess.id && _jtSessionTag.crc32 == hash sess
-    req.session = null if _jtSessionTag.id == sess.id && _jtSessionTag.crc32 == hash sess
